@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 const SYSTEM_PROMPT = `You are a Xiangqi (Chinese Chess / 象棋) engine playing as Black (top side, 黑方).
 You will be given a board position and a numbered list of all legal moves available to you.
 Choose the strongest move — consider captures, tactical threats, piece coordination, and king safety.
-You must call the select_move tool with the index of your chosen move.`;
+Respond with ONLY a JSON object on a single line, e.g.: {"move_index":5}
+Do not include any other text.`;
 
 export async function onRequestPost({ request, env }) {
   const apiKey = env.ANTHROPIC_API_KEY;
@@ -42,39 +43,25 @@ export async function onRequestPost({ request, env }) {
     '',
     'Your legal moves (as Black):',
     moveList,
+    '',
+    'Reply with ONLY a JSON object, e.g.: {"move_index":5}',
   ].join('\n');
 
   const client = new Anthropic({ apiKey });
 
   try {
     const response = await client.messages.create({
-      model: 'claude-opus-4-7',
-      max_tokens: 1024,
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 64,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
-      tools: [
-        {
-          name: 'select_move',
-          description: 'Select the move to play by its index in the legal moves list.',
-          input_schema: {
-            type: 'object',
-            properties: {
-              move_index: {
-                type: 'integer',
-                description: 'Zero-based index of the chosen move.',
-              },
-            },
-            required: ['move_index'],
-          },
-        },
-      ],
-      tool_choice: { type: 'tool', name: 'select_move' },
     });
 
-    const toolUse = response.content.find(b => b.type === 'tool_use');
-    if (!toolUse) throw new Error('No move selected.');
+    const text = response.content.find(b => b.type === 'text')?.text ?? '';
+    const match = text.match(/"move_index"\s*:\s*(\d+)/);
+    if (!match) throw new Error(`Could not parse move index from: ${text}`);
 
-    const { move_index } = toolUse.input;
+    const move_index = parseInt(match[1], 10);
     const chosen = validMoves[move_index];
     if (!chosen) throw new Error(`Invalid move index: ${move_index}`);
 
