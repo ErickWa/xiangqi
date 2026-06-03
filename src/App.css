@@ -1,0 +1,197 @@
+.app {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0f1117;
+  color: #e2e2e2;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1100px;
+  padding: 20px 32px;
+}
+
+.header-text {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.header-text h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  color: #ffd700;
+  font-family: 'Noto Serif SC', STSong, SimSun, serif;
+  line-height: 1;
+}
+
+.subtitle {
+  color: #888;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+.btn-reset {
+  background: #7a3010;
+  color: #ffe066;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+.btn-reset:hover { background: #9a4010; }
+
+/* ── Banners ── */
+.banner {
+  padding: 10px 32px;
+  border-radius: 5px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.banner.checkmate {
+  background: #7a0000;
+  color: #fff;
+}
+
+/* ── Board + Panel layout ── */
+.main {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  padding: 0 24px 48px;
+}
+
+/* ── Strategy panel ── */
+.panel {
+  width: 360px;
+  background: #181c25;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.turn-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.turn-badge {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.turn-badge.red   { background: #cc2200; color: #ffe066; }
+.turn-badge.black { background: #2a2a2a; color: #ddd;    }
+
+.check-label {
+  background: #8B6000;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.analysis-box {
+  min-height: 180px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: #0d1117;
+  border-radius: 5px;
+  padding: 14px;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #cdd;
+}
+
+.placeholder { color: #555; font-style: italic; margin: 0; }
+
+.cursor {
+  display: inline-block;
+  animation: blink 0.8s step-end infinite;
+  color: #ffd700;
+}
+@keyframes blink { 50% { opacity: 0 } }
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.question-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid #2c2c3a;
+  color: #e2e2e2;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+.question-input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+.question-input:disabled { opacity: 0.5; }
+
+.analyze-btn {
+  background: #7a3010;
+  color: #ffe066;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.analyze-btn:hover:not(:disabled) { background: #9a4010; }
+.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Move history ── */
+.history { display: flex; flex-direction: column; gap: 6px; }
+
+.history-title {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.move-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.move-chip {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+.move-chip.red   { background: #3a1500; color: #ffe066; }
+.move-chip.black { background: #1a1a1a; color: #aaa;    }
