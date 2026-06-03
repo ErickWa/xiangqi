@@ -39,10 +39,11 @@ function BoardLines() {
   return <>{lines}</>;
 }
 
-export default function Board({ gameState, onSelect, onMove }) {
+export default function Board({ gameState, onSelect, onMove, disabled = false }) {
   const { board, selected, validMoves, currentTurn } = gameState;
 
   const handleClick = useCallback((row, col) => {
+    if (disabled) return;
     const piece = board[`${row},${col}`];
     if (selected) {
       const isValid = validMoves.some(([r, c]) => r === row && c === col);
@@ -56,7 +57,7 @@ export default function Board({ gameState, onSelect, onMove }) {
     } else {
       if (piece?.color === currentTurn) onSelect(row, col);
     }
-  }, [board, selected, validMoves, currentTurn, onSelect, onMove]);
+  }, [board, selected, validMoves, currentTurn, onSelect, onMove, disabled]);
 
   return (
     <svg

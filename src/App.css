@@ -37,6 +37,29 @@
   letter-spacing: 0.04em;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-ai-toggle {
+  background: #1a2430;
+  color: #7ab8cc;
+  border: 1px solid #2a4a5a;
+  padding: 8px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-ai-toggle:hover { background: #223040; }
+.btn-ai-toggle.active {
+  background: #0a3a5a;
+  color: #55ddff;
+  border-color: #55ddff;
+}
+
 .btn-reset {
   background: #7a3010;
   color: #ffe066;
@@ -60,6 +83,10 @@
 .banner.checkmate {
   background: #7a0000;
   color: #fff;
+}
+.banner.ai-thinking {
+  background: #0a3a5a;
+  color: #55ddff;
 }
 
 /* ── Board + Panel layout ── */

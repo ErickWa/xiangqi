@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
-import { createInitialState } from './logic/gameState';
+import { createInitialState, boardToAscii } from './logic/gameState';
 import { getValidMoves, applyMove, isInCheckState, isCheckmate } from './logic/moves';
 import './App.css';
 
@@ -10,8 +10,22 @@ function toNotation(piece, fromRow, fromCol, toRow, toCol) {
   return `${piece.char}${cols[fromCol]}${fromRow}→${cols[toCol]}${toRow}`;
 }
 
+function getAllValidMoves(board, color) {
+  const moves = [];
+  for (const [key, piece] of Object.entries(board)) {
+    if (piece.color !== color) continue;
+    const [row, col] = key.split(',').map(Number);
+    for (const [toRow, toCol] of getValidMoves(board, row, col)) {
+      moves.push({ char: piece.char, from: [row, col], to: [toRow, toCol] });
+    }
+  }
+  return moves;
+}
+
 export default function App() {
   const [game, setGame] = useState(createInitialState);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
 
   const handleSelect = useCallback((row, col) => {
     if (row === null) {
@@ -50,6 +64,73 @@ export default function App() {
     });
   }, []);
 
+  const handleAiMove = useCallback((fromRow, fromCol, toRow, toCol) => {
+    setGame(g => {
+      const piece = g.board[`${fromRow},${fromCol}`];
+      if (!piece) return g;
+      const newBoard = applyMove(g.board, fromRow, fromCol, toRow, toCol);
+      const notation = toNotation(piece, fromRow, fromCol, toRow, toCol);
+      const inCheck = isInCheckState(newBoard, 'red');
+      const mated   = inCheck && isCheckmate(newBoard, 'red');
+      return {
+        ...g,
+        board: newBoard,
+        currentTurn: 'red',
+        selected: null,
+        validMoves: [],
+        moveHistory: [...g.moveHistory, notation],
+        status: mated ? 'checkmate' : inCheck ? 'check' : 'playing',
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!aiEnabled || game.currentTurn !== 'black' || game.status !== 'playing') return;
+
+    const moves = getAllValidMoves(game.board, 'black');
+    if (moves.length === 0) return;
+
+    let cancelled = false;
+    setAiThinking(true);
+
+    fetch('/api/move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        board: boardToAscii(game.board),
+        moveHistory: game.moveHistory,
+        validMoves: moves,
+      }),
+    })
+      .then(r => r.json())
+      .then(({ from, to, error }) => {
+        if (cancelled) return;
+        if (error || !from || !to) {
+          console.error('AI move error:', error);
+          setAiEnabled(false);
+          return;
+        }
+        handleAiMove(from[0], from[1], to[0], to[1]);
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('AI move failed:', err);
+          setAiEnabled(false);
+        }
+      })
+      .finally(() => { if (!cancelled) setAiThinking(false); });
+
+    return () => {
+      cancelled = true;
+      setAiThinking(false);
+    };
+  }, [aiEnabled, game.currentTurn, game.status, game.board, game.moveHistory, handleAiMove]);
+
+  function resetGame() {
+    setAiThinking(false);
+    setGame(createInitialState());
+  }
+
   return (
     <div className="app">
       <header className="header">
@@ -57,9 +138,17 @@ export default function App() {
           <h1>象棋</h1>
           <span className="subtitle">Xiangqi · Learn Chinese Chess</span>
         </div>
-        <button className="btn-reset" onClick={() => setGame(createInitialState())}>
-          New Game
-        </button>
+        <div className="header-actions">
+          <button
+            className={`btn-ai-toggle ${aiEnabled ? 'active' : ''}`}
+            onClick={() => setAiEnabled(e => !e)}
+          >
+            AI opponent: {aiEnabled ? 'On' : 'Off'}
+          </button>
+          <button className="btn-reset" onClick={resetGame}>
+            New Game
+          </button>
+        </div>
       </header>
 
       {game.status === 'checkmate' && (
@@ -68,8 +157,19 @@ export default function App() {
         </div>
       )}
 
+      {aiThinking && (
+        <div className="banner ai-thinking">
+          黑方 is thinking…
+        </div>
+      )}
+
       <main className="main">
-        <Board gameState={game} onSelect={handleSelect} onMove={handleMove} />
+        <Board
+          gameState={game}
+          onSelect={handleSelect}
+          onMove={handleMove}
+          disabled={aiEnabled && game.currentTurn === 'black'}
+        />
         <StrategyPanel gameState={game} />
       </main>
     </div>

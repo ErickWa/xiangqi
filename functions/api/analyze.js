@@ -77,8 +77,9 @@ export async function onRequestPost({ request, env }) {
     async start(controller) {
       try {
         const stream = client.messages.stream({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
+          model: 'claude-opus-4-7',
+          max_tokens: 4096,
+          thinking: { type: 'adaptive' },
           system: [
             {
               type: 'text',
