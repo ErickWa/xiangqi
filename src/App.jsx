@@ -25,7 +25,7 @@ function getAllValidMoves(board, color) {
 export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
-  const [aiThinking, setAiThinking] = useState(false);
+  const aiThinking = aiEnabled && game.currentTurn === 'black' && game.status === 'playing';
 
   const handleSelect = useCallback((row, col) => {
     if (row === null) {
@@ -91,7 +91,6 @@ export default function App() {
     if (moves.length === 0) return;
 
     let cancelled = false;
-    setAiThinking(true);
 
     fetch('/api/move', {
       method: 'POST',
@@ -117,17 +116,12 @@ export default function App() {
           console.error('AI move failed:', err);
           setAiEnabled(false);
         }
-      })
-      .finally(() => { if (!cancelled) setAiThinking(false); });
+      });
 
-    return () => {
-      cancelled = true;
-      setAiThinking(false);
-    };
+    return () => { cancelled = true; };
   }, [aiEnabled, game.currentTurn, game.status, game.board, game.moveHistory, handleAiMove]);
 
   function resetGame() {
-    setAiThinking(false);
     setGame(createInitialState());
   }
 

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { MODEL } from './_model.js';
 
 // Long system prompt — cached so repeated analysis calls are fast and cheap
 const SYSTEM_PROMPT = `You are an expert Xiangqi (Chinese Chess / 象棋) coach. Your role is to analyze board positions and give clear, educational strategic advice to help students learn.
@@ -77,7 +78,7 @@ export async function onRequestPost({ request, env }) {
     async start(controller) {
       try {
         const stream = client.messages.stream({
-          model: 'claude-3-5-sonnet-20241022',
+          model: MODEL,
           max_tokens: 1024,
           system: [
             {

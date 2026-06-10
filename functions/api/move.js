@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { MODEL } from './_model.js';
 
 const SYSTEM_PROMPT = `You are a Xiangqi (Chinese Chess / 象棋) engine playing as Black (top side, 黑方).
 You will be given a board position and a numbered list of all legal moves available to you.
@@ -51,7 +52,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: MODEL,
       max_tokens: 64,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
