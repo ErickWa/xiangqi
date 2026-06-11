@@ -251,6 +251,7 @@ export function isGameOver(state) {
 // (check, checkmate, stalemate — a loss in Xiangqi — repetition draw, or
 // perpetual-check loss). Returns the next game state.
 export function makeMove(state, fromRow, fromCol, toRow, toCol) {
+  if (isGameOver(state)) return state;
   const piece = state.board[`${fromRow},${fromCol}`];
   if (!piece) return state;
 

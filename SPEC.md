@@ -120,3 +120,6 @@ Work top to bottom; fix anything broken first.
   resolves checkmate, stalemate (loss), repetition draw, and perpetual-check
   loss; App handlers are now thin wrappers. Fixed bug where the AI stopped
   moving while in check.
+- 2026-06-11 — review: found and fixed play continuing after game over
+  (guard in `makeMove` + board disabled); eslint now ignores `.wrangler`
+  artifacts; banner cleanup. No scope creep; src/ at 760 lines (budget 3,000).

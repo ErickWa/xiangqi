@@ -108,8 +108,7 @@ export default function App() {
         <div className="banner checkmate">
           {game.status === 'draw'
             ? 'Draw by repetition'
-            : `${{ checkmate: 'Checkmate', stalemate: 'Stalemate', perpetual: 'Perpetual check' }[game.status]}
-               — ${game.winner === 'red' ? 'Red' : 'Black'} wins!`}
+            : `${{ checkmate: 'Checkmate', stalemate: 'Stalemate', perpetual: 'Perpetual check' }[game.status]} — ${game.winner === 'red' ? 'Red' : 'Black'} wins!`}
         </div>
       )}
 
@@ -124,7 +123,7 @@ export default function App() {
           gameState={game}
           onSelect={handleSelect}
           onMove={handleMove}
-          disabled={aiEnabled && game.currentTurn === 'black'}
+          disabled={gameOver || (aiEnabled && game.currentTurn === 'black')}
         />
         <StrategyPanel gameState={game} />
       </main>
