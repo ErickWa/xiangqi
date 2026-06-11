@@ -137,7 +137,7 @@ Work top to bottom; fix anything broken first.
       the feed reads as a continuous account of the game.
 - [x] **Opening book**: small data table of common openings with names and
       one-line ideas; coach announces recognized openings.
-- [ ] **Post-game review**: top-3 consequential moments with better lines.
+- [x] **Post-game review**: top-3 consequential moments with better lines.
 - [ ] **Claude as optional enhancement**: gate `/api/analyze` behind a flag;
       app fully functional without it; graceful offline degradation.
 - [ ] **Simplification pass**: remove dead code, collapse needless
@@ -241,3 +241,9 @@ Work top to bottom; fix anything broken first.
   pushCoach clears takeback on all earlier entries, so the offer died in the
   same batch. Blunder note is now pushed last. Opening book and label fix
   otherwise clean. src/ at 1,985 lines (budget 3,000).
+- 2026-06-11 — Post-game review: every player move's engine judgment (delta
+  vs expected PV reply, better line) accumulates in an eval log; when the
+  game ends the coach feed closes with the top-3 adverse swings in game
+  order via `postGameReview` (or a compliment for a clean game). Rewind
+  truncates the log and re-arms the review. 2 tests added (32 total).
+  src/ at 2,042 lines (budget 3,000).

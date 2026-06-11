@@ -1,6 +1,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { explainAiMove, explainPlayerMove, assessPlayerMove, pieceName, BLUNDER_THRESHOLD } from './coach.js';
+import { explainAiMove, explainPlayerMove, assessPlayerMove, postGameReview, pieceName, BLUNDER_THRESHOLD } from './coach.js';
+
+test('post-game review picks the worst moments in game order', () => {
+  const lines = postGameReview([
+    { moveIndex: 1, moveText: '兵c6→c5', delta: 20, betterText: null },
+    { moveIndex: 3, moveText: '馬b9→c7', delta: 500, betterText: '炮b7→e7' },
+    { moveIndex: 5, moveText: '車a9→a4', delta: 200, betterText: '車a9→a6' },
+    { moveIndex: 7, moveText: '相c9→e7', delta: 180, betterText: null },
+    { moveIndex: 9, moveText: '兵e6→e5', delta: 300, betterText: '炮h7→h3' },
+  ]);
+  assert.equal(lines.length, 3);
+  assert.match(lines[0], /move 2 .*major turning point.*炮b7→e7/);
+  assert.match(lines[1], /move 3 .*slip.*車a9→a6/);
+  assert.match(lines[2], /move 5 .*slip.*炮h7→h3/);
+});
+
+test('post-game review of a clean game compliments the player', () => {
+  const lines = postGameReview([
+    { moveIndex: 1, moveText: '炮b7→e7', delta: -40, betterText: null },
+  ]);
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /clean game/);
+});
 
 test('narrates a player capture giving check', () => {
   const text = explainPlayerMove({

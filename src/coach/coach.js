@@ -51,6 +51,25 @@ export function explainPlayerMove({ moveText, pieceChar, capturedChar, check, es
   return parts.join(' ');
 }
 
+// Post-game review: the most consequential player moments — the largest
+// adverse eval swings — in game order, each with the better line when known.
+// evalLog entries: {moveIndex (1-based ply), moveText, delta, betterText}.
+export function postGameReview(evalLog, count = 3) {
+  const moments = evalLog
+    .filter(e => e.delta >= BLUNDER_THRESHOLD)
+    .sort((a, b) => b.delta - a.delta)
+    .slice(0, count)
+    .sort((a, b) => a.moveIndex - b.moveIndex);
+  if (moments.length === 0) {
+    return ['No major turning points — a clean game. Well played.'];
+  }
+  return moments.map(m => {
+    const what = m.delta >= 400 ? 'a major turning point' : 'a slip';
+    const better = m.betterText ? ` — stronger was ${m.betterText}` : '';
+    return `Your move ${Math.ceil(m.moveIndex / 2)} (${m.moveText}) was ${what}${better}.`;
+  });
+}
+
 // delta: how much the engine's outlook improved after the player's move,
 // relative to the reply it expected. Positive = the player did worse than
 // expected; strongly negative = the player outplayed the expectation.

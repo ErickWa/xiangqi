@@ -3,7 +3,7 @@ import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
 import { createInitialState } from './logic/gameState';
 import { getValidMoves, makeMove, isGameOver, toNotation } from './logic/moves';
-import { explainAiMove, explainPlayerMove, assessPlayerMove, BLUNDER_THRESHOLD } from './coach/coach';
+import { explainAiMove, explainPlayerMove, assessPlayerMove, postGameReview, BLUNDER_THRESHOLD } from './coach/coach';
 import { recognizeOpenings } from './coach/openings';
 import './App.css';
 
@@ -28,6 +28,8 @@ export default function App() {
   const [coachLog, setCoachLog] = useState([]);
   const lastAiResult = useRef(null); // previous search: {score, pv, board after AI's move}
   const history = useRef([]);        // pre-move snapshots, one per move played
+  const evalLog = useRef([]);        // per-player-move engine judgments, for post-game review
+  const reviewPushed = useRef(false);
   const logId = useRef(0);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
@@ -45,6 +47,14 @@ export default function App() {
     ...log.map(e => ({ ...e, takeback: false })),
     { id: ++logId.current, text, takeback },
   ]), []);
+
+  // When a move ends the game, close the feed with the top moments.
+  const maybePushReview = useCallback((next) => {
+    if (!isGameOver(next) || reviewPushed.current || evalLog.current.length === 0) return;
+    reviewPushed.current = true;
+    pushCoach('— Post-game review —');
+    for (const line of postGameReview(evalLog.current)) pushCoach(line);
+  }, [pushCoach]);
 
   // Announce each recognized opening once per game.
   const announcedOpenings = useRef(new Set());
@@ -91,9 +101,10 @@ export default function App() {
         crossedRiver: piece.color === 'red' && fromRow >= 5 && toRow <= 4,
       }));
       announceOpenings(next.moveHistory);
+      maybePushReview(next);
     }
     setGame(next);
-  }, [game, aiEnabled, pushCoach, announceOpenings]);
+  }, [game, aiEnabled, pushCoach, announceOpenings, maybePushReview]);
 
   useEffect(() => {
     if (!aiThinking) return;
@@ -131,12 +142,18 @@ export default function App() {
       // offer only survives as the newest entry.
       const prev = lastAiResult.current;
       if (prev) {
-        const note = assessPlayerMove({
-          delta: data.score - prev.score,
-          betterText: prev.pv[1] && notate(prev.board, prev.pv[1]),
+        const delta = data.score - prev.score;
+        const betterText = prev.pv[1] && notate(prev.board, prev.pv[1]);
+        evalLog.current.push({
+          moveIndex: game.moveHistory.length, // the player's move, 1-based ply
+          moveText: game.moveHistory[game.moveHistory.length - 1],
+          delta,
+          betterText,
         });
-        if (note) pushCoach(note, data.score - prev.score >= BLUNDER_THRESHOLD);
+        const note = assessPlayerMove({ delta, betterText });
+        if (note) pushCoach(note, delta >= BLUNDER_THRESHOLD);
       }
+      maybePushReview(next);
 
       lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
       history.current.push(game);
@@ -155,13 +172,15 @@ export default function App() {
     });
 
     return () => { worker.terminate(); clearTimeout(beat); };
-  }, [aiThinking, game, aiLevel, pushCoach, announceOpenings]);
+  }, [aiThinking, game, aiLevel, pushCoach, announceOpenings, maybePushReview]);
 
   function resetGame() {
     setAiError(null);
     setCoachLog([]);
     lastAiResult.current = null;
     history.current = [];
+    evalLog.current = [];
+    reviewPushed.current = false;
     announcedOpenings.current = new Set();
     setGame(createInitialState());
   }
@@ -174,6 +193,9 @@ export default function App() {
     let target = h.pop();
     if (aiEnabled) while (target.currentTurn !== 'red' && h.length > 0) target = h.pop();
     lastAiResult.current = null; // previous search no longer matches the position
+    // Drop judgments for undone moves; allow a fresh review if play resumes.
+    evalLog.current = evalLog.current.filter(e => e.moveIndex <= target.moveHistory.length);
+    reviewPushed.current = false;
     setCoachLog(log => log.some(e => e.takeback)
       ? log.map(e => ({ ...e, takeback: false }))
       : log);
