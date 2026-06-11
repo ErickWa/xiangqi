@@ -133,3 +133,8 @@ Work top to bottom; fix anything broken first.
   bug: perpetual check was misjudged as a draw when the escaping side
   completed the third repetition — `repetitionLoser` now examines both
   sides' moves within the cycle.
+- 2026-06-11 — user-reported fix: AI gave up after one quick failure because
+  the retry counter never reset across games/toggles; verified the model
+  call itself returns clean JSON. Retry counter now resets on toggle and
+  New Game, and the failing error is shown in a banner instead of only the
+  console.

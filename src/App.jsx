@@ -21,6 +21,7 @@ export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiRetry, setAiRetry] = useState(0);
+  const [aiError, setAiError] = useState(null);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
 
@@ -67,6 +68,7 @@ export default function App() {
         if (cancelled) return;
         if (error || !from || !to) throw new Error(error || 'Bad AI response');
         setAiRetry(0);
+        setAiError(null);
         handleAiMove(from[0], from[1], to[0], to[1]);
       })
       .catch(err => {
@@ -74,14 +76,19 @@ export default function App() {
         console.error('AI move failed:', err);
         // Low-tier API keys allow ~5 requests/min; wait out the rate-limit
         // window and retry before giving up on the AI.
-        if (aiRetry < 3) timer = setTimeout(() => setAiRetry(r => r + 1), 15000);
-        else setAiEnabled(false);
+        if (aiRetry < 3) {
+          timer = setTimeout(() => setAiRetry(r => r + 1), 15000);
+        } else {
+          setAiEnabled(false);
+          setAiError(err.message);
+        }
       });
 
     return () => { cancelled = true; clearTimeout(timer); };
   }, [aiEnabled, game.currentTurn, gameOver, game.board, game.moveHistory, handleAiMove, aiRetry]);
 
   function resetGame() {
+    setAiRetry(0);
     setGame(createInitialState());
   }
 
@@ -95,7 +102,7 @@ export default function App() {
         <div className="header-actions">
           <button
             className={`btn-ai-toggle ${aiEnabled ? 'active' : ''}`}
-            onClick={() => setAiEnabled(e => !e)}
+            onClick={() => { setAiRetry(0); setAiError(null); setAiEnabled(e => !e); }}
           >
             AI opponent: {aiEnabled ? 'On' : 'Off'}
           </button>
@@ -116,6 +123,12 @@ export default function App() {
       {aiThinking && (
         <div className="banner ai-thinking">
           黑方 is thinking…
+        </div>
+      )}
+
+      {aiError && (
+        <div className="banner checkmate">
+          AI opponent stopped: {aiError}
         </div>
       )}
 
