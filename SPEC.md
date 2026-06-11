@@ -224,3 +224,7 @@ Work top to bottom; fix anything broken first.
   history stack of pre-move snapshots; blunder takeback now reuses the same
   rewind, replacing the single-snapshot mechanism. Works mid-search and
   after game over.
+- 2026-06-11 — review: axis labels, player narration, and rewind stack all
+  verified (rewind-during-search cancellation, stack termination on red-turn
+  states, takeback-offer expiry); nothing to fix. Moving on to a work
+  iteration per the loop prompt.
