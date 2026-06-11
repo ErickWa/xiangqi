@@ -1,26 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
-import { createInitialState, boardToAscii } from './logic/gameState';
+import { createInitialState } from './logic/gameState';
 import { getValidMoves, makeMove, isGameOver } from './logic/moves';
 import './App.css';
-
-function getAllValidMoves(board, color) {
-  const moves = [];
-  for (const [key, piece] of Object.entries(board)) {
-    if (piece.color !== color) continue;
-    const [row, col] = key.split(',').map(Number);
-    for (const [toRow, toCol] of getValidMoves(board, row, col)) {
-      moves.push({ char: piece.char, from: [row, col], to: [toRow, toCol] });
-    }
-  }
-  return moves;
-}
 
 export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
-  const [aiRetry, setAiRetry] = useState(0);
   const [aiError, setAiError] = useState(null);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
@@ -46,49 +33,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!aiEnabled || game.currentTurn !== 'black' || gameOver) return;
+    if (!aiThinking) return;
 
-    const moves = getAllValidMoves(game.board, 'black');
-    if (moves.length === 0) return;
+    const worker = new Worker(new URL('./engine/worker.js', import.meta.url), { type: 'module' });
+    worker.onmessage = ({ data }) => {
+      if (!data.bestMove) {
+        setAiEnabled(false);
+        setAiError(data.error || 'Engine found no move');
+        return;
+      }
+      const { from, to } = data.bestMove;
+      handleAiMove(from[0], from[1], to[0], to[1]);
+    };
+    worker.onerror = (err) => {
+      console.error('Engine error:', err);
+      setAiEnabled(false);
+      setAiError(err.message || 'Engine failed');
+    };
+    worker.postMessage({ position: { board: game.board, turn: 'black' }, limits: { timeMs: 1500 } });
 
-    let cancelled = false;
-    let timer;
-
-    fetch('/api/move', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        board: boardToAscii(game.board),
-        moveHistory: game.moveHistory,
-        validMoves: moves,
-      }),
-    })
-      .then(r => r.json())
-      .then(({ from, to, error }) => {
-        if (cancelled) return;
-        if (error || !from || !to) throw new Error(error || 'Bad AI response');
-        setAiRetry(0);
-        setAiError(null);
-        handleAiMove(from[0], from[1], to[0], to[1]);
-      })
-      .catch(err => {
-        if (cancelled) return;
-        console.error('AI move failed:', err);
-        // Low-tier API keys allow ~5 requests/min; wait out the rate-limit
-        // window and retry before giving up on the AI.
-        if (aiRetry < 3) {
-          timer = setTimeout(() => setAiRetry(r => r + 1), 15000);
-        } else {
-          setAiEnabled(false);
-          setAiError(err.message);
-        }
-      });
-
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [aiEnabled, game.currentTurn, gameOver, game.board, game.moveHistory, handleAiMove, aiRetry]);
+    return () => worker.terminate();
+  }, [aiThinking, game.board, handleAiMove]);
 
   function resetGame() {
-    setAiRetry(0);
     setAiError(null);
     setGame(createInitialState());
   }
@@ -103,7 +70,7 @@ export default function App() {
         <div className="header-actions">
           <button
             className={`btn-ai-toggle ${aiEnabled ? 'active' : ''}`}
-            onClick={() => { setAiRetry(0); setAiError(null); setAiEnabled(e => !e); }}
+            onClick={() => { setAiError(null); setAiEnabled(e => !e); }}
           >
             AI opponent: {aiEnabled ? 'On' : 'Off'}
           </button>

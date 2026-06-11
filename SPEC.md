@@ -93,7 +93,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Add rules tests**: `node --test` suite with move-generation counts
       from the start position and a handful of tactical positions; wire up
       `npm test`.
-- [ ] **Local engine v1** (`src/engine/`): material + piece-square evaluation,
+- [x] **Local engine v1** (`src/engine/`): material + piece-square evaluation,
       iterative-deepening alpha-beta with capture quiescence, time-limited,
       in a Web Worker. Replace the `/api/move` opponent with it; delete
       `functions/api/move.js`.
@@ -141,3 +141,10 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — review: retry/error handling and test suite are sound; only
   fix needed was clearing the stale AI-error banner on New Game. No dead
   code or scope creep; src/ at 1,122 lines (budget 3,000).
+- 2026-06-11 — Local engine v1: `src/engine/engine.js` (flat-array movegen
+  with flying-general-as-king-capture, material + computed piece-square eval,
+  iterative-deepening negamax with capture quiescence, time-limited) behind
+  a Web Worker speaking `{position, limits} → {bestMove, score, pv, depth}`.
+  Reaches depth 5 in 1.5s from the start position. App now uses the worker;
+  `/api/move` and its rate-limit retry machinery deleted (also removes the
+  network-block failure mode seen earlier today). 4 engine tests added.
