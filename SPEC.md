@@ -252,3 +252,6 @@ Work top to bottom; fix anything broken first.
   absent from the bundle); a failed `/api/analyze` call now degrades to a
   friendly notice pointing at the offline coach feed instead of a dev-centric
   error. App is fully functional with no backend.
+- 2026-06-11 — review: post-game review + Claude gating verified clean (ply
+  arithmetic, review-once guards and rewind re-arm, flag tree-shaking);
+  nothing to fix. Moving on to the simplification pass.
