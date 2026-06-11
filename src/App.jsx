@@ -89,6 +89,7 @@ export default function App() {
 
   function resetGame() {
     setAiRetry(0);
+    setAiError(null);
     setGame(createInitialState());
   }
 

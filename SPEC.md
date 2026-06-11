@@ -138,3 +138,6 @@ Work top to bottom; fix anything broken first.
   call itself returns clean JSON. Retry counter now resets on toggle and
   New Game, and the failing error is shown in a banner instead of only the
   console.
+- 2026-06-11 — review: retry/error handling and test suite are sound; only
+  fix needed was clearing the stale AI-error banner on New Game. No dead
+  code or scope creep; src/ at 1,122 lines (budget 3,000).
