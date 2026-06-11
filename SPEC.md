@@ -209,3 +209,6 @@ Work top to bottom; fix anything broken first.
   would have reverted the wrong move pair — offers now expire on the player's
   next move. Valid-move dots now respect `disabled` (defensive). src/ at
   1,769 lines (budget 3,000).
+- 2026-06-11 — user request: axis labels on the board (columns a–i along the
+  bottom, rows 0–9 down the left) matching move notation, so feed entries
+  like 炮b7→e7 can be located at a glance.

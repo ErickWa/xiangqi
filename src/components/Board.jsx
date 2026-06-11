@@ -39,6 +39,25 @@ function BoardLines() {
   return <>{lines}</>;
 }
 
+// Axis labels matching move notation (columns a–i, rows 0–9, row 0 at top).
+function AxisLabels() {
+  const labels = [];
+  const cols = 'abcdefghi';
+  for (let col = 0; col < 9; col++) {
+    labels.push(
+      <text key={`c${col}`} x={x(col)} y={H - PAD / 2 + 6} textAnchor="middle"
+        fill="#7a4010" fontSize="13" fontFamily="monospace" opacity="0.7">{cols[col]}</text>,
+    );
+  }
+  for (let row = 0; row < 10; row++) {
+    labels.push(
+      <text key={`r${row}`} x={PAD / 2 - 6} y={y(row)} textAnchor="middle" dominantBaseline="central"
+        fill="#7a4010" fontSize="13" fontFamily="monospace" opacity="0.7">{row}</text>,
+    );
+  }
+  return <>{labels}</>;
+}
+
 export default function Board({ gameState, onSelect, onMove, disabled = false }) {
   const { board, selected, validMoves, currentTurn, lastMove, status } = gameState;
 
@@ -93,6 +112,7 @@ export default function Board({ gameState, onSelect, onMove, disabled = false })
       style={{ background: '#f0c67a', borderRadius: 6, boxShadow: '0 6px 24px rgba(0,0,0,0.5)' }}
     >
       <BoardLines />
+      <AxisLabels />
 
       {/* River labels */}
       <text x={W / 2 - 80} y={y(4) + CELL / 2} textAnchor="middle" dominantBaseline="middle"
