@@ -221,9 +221,9 @@ export function hasNoLegalMoves(board, color) {
 }
 
 // log: one {key, mover, gaveCheck} entry per position reached. When the
-// latest position has occurred 3 times: if every move by the side that just
-// moved within the repeating cycle gave check, that side loses (perpetual
-// check); otherwise it's a draw. Returns null, 'draw', or the losing color.
+// latest position has occurred 3 times: if one side gave check with every
+// move inside the repeating cycle, that side loses (perpetual check);
+// otherwise it's a draw. Returns null, 'draw', or the losing color.
 export function repetitionLoser(log) {
   const last = log[log.length - 1];
   const occurrences = [];
@@ -231,9 +231,12 @@ export function repetitionLoser(log) {
     if (log[i].key === last.key) occurrences.push(i);
   }
   if (occurrences.length < 3) return null;
-  const cycle = log.slice(occurrences[occurrences.length - 3]);
-  const moverChecks = cycle.filter(e => e.mover === last.mover);
-  return moverChecks.every(e => e.gaveCheck) ? last.mover : 'draw';
+  const cycle = log.slice(occurrences[occurrences.length - 3] + 1);
+  for (const color of [RED, BLACK]) {
+    const entries = cycle.filter(e => e.mover === color);
+    if (entries.length > 0 && entries.every(e => e.gaveCheck)) return color;
+  }
+  return 'draw';
 }
 
 export function toNotation(piece, fromRow, fromCol, toRow, toCol) {

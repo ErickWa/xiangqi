@@ -90,7 +90,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Complete the rules engine** in `src/logic/`: verify all piece moves,
       add check detection, checkmate/stalemate, flying-general, and
       repetition/perpetual-check draw rules. Pure functions, no UI coupling.
-- [ ] **Add rules tests**: `node --test` suite with move-generation counts
+- [x] **Add rules tests**: `node --test` suite with move-generation counts
       from the start position and a handful of tactical positions; wire up
       `npm test`.
 - [ ] **Local engine v1** (`src/engine/`): material + piece-square evaluation,
@@ -127,3 +127,9 @@ Work top to bottom; fix anything broken first.
   Cause: low-tier API key (5 req/min) → 429s on /api/move treated as fatal.
   AI moves now retry up to 3× after the rate-limit window before disabling.
   (The local engine roadmap item removes this failure mode entirely.)
+- 2026-06-11 — Added 9-test rules suite (`npm test`): start-position move
+  counts (44/side), cannon screens, flying general, mate/stalemate,
+  repetition, perpetual check, soldier river rules. The suite caught a real
+  bug: perpetual check was misjudged as a draw when the escaping side
+  completed the third repetition — `repetitionLoser` now examines both
+  sides' moves within the cycle.
