@@ -140,7 +140,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Post-game review**: top-3 consequential moments with better lines.
 - [x] **Claude as optional enhancement**: gate `/api/analyze` behind a flag;
       app fully functional without it; graceful offline degradation.
-- [ ] **Simplification pass**: remove dead code, collapse needless
+- [x] **Simplification pass**: remove dead code, collapse needless
       abstractions, confirm `src/` LOC budget, update README to match reality.
 
 ## Progress log
@@ -255,3 +255,8 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — review: post-game review + Claude gating verified clean (ply
   arithmetic, review-once guards and rewind re-arm, flag tree-shaking);
   nothing to fix. Moving on to the simplification pass.
+- 2026-06-11 — Simplification pass: deleted unreferenced template assets
+  (src/assets/*, public/icons.svg); audited all exports (every one consumed
+  by app or tests, no needless abstractions found); rewrote README to match
+  reality (offline-first local engine + coach, optional Claude panel behind
+  VITE_CLAUDE_COACH). src/ at 2,055 lines (budget 3,000).
