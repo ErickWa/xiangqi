@@ -25,6 +25,13 @@ enhancement, never a requirement.
       post-game review derived from engine analysis (principal variation, eval
       swings, hanging pieces, named opening patterns) rendered through a small
       template library.
+- [ ] Pieces move visibly, not instantaneously: every move (player and AI)
+      animates the piece gliding from origin to destination, captures and
+      checks are emphasized, and the last move stays highlighted so the AI's
+      reply is always easy to follow.
+- [ ] The game is narrated as it unfolds: a running written commentary feed
+      covers both sides' moves — the AI's plans *and* the player's moves —
+      so a learner can read the story of the game while playing it.
 - [ ] Claude-backed coaching is an optional enhancement behind a single flag;
       the app degrades gracefully when no API key / no network is present.
 - [ ] `npm run build` produces a static bundle that is fully functional when
@@ -49,6 +56,24 @@ The opponent is a *teacher*, not just an adversary:
    with the better line.
 5. **Openings**: recognizes and names common openings (central cannon, screen
    horses, etc.) with a one-line idea for each.
+6. **Narrates continuously**: the commentary feed reads as a running account
+   of the game, not just isolated AI-move captions — it acknowledges the
+   player's moves (captures, checks, developing moves, threats created or
+   answered) in plain language matched to the player's level.
+
+## Interaction feel
+
+Moves must be *watchable*. A teaching app fails if the student can't see what
+just happened:
+
+- A moved piece glides from its origin to its destination over roughly
+  250–350ms (CSS transition; no animation library) rather than teleporting.
+- The AI's move begins after a brief beat so it reads as a response, and its
+  origin/destination squares stay highlighted until the player moves.
+- Captures get a visible emphasis (e.g. the captured piece fades out);
+  check gets a distinct cue on the threatened general.
+- Input is locked only while a piece is in flight; the UI must never feel
+  laggy because of animation.
 
 ## Architecture
 
@@ -101,6 +126,13 @@ Work top to bottom; fix anything broken first.
 - [x] **Offline coach v1** (`src/coach/`): move explanations and blunder
       detection from engine output (eval delta, PV, threatened pieces) via
       templates; takeback on blunders.
+- [ ] **Animated movement**: pieces glide between intersections per the
+      "Interaction feel" section (CSS transitions only, no new dependencies);
+      capture fade, check cue, persistent last-move highlight, input locked
+      during flight.
+- [ ] **Full-game narration**: extend the coach feed to narrate the player's
+      moves too (captures, checks, threats made/answered, development), so
+      the feed reads as a continuous account of the game.
 - [ ] **Opening book**: small data table of common openings with names and
       one-line ideas; coach announces recognized openings.
 - [ ] **Post-game review**: top-3 consequential moments with better lines.
@@ -162,3 +194,6 @@ Work top to bottom; fix anything broken first.
   against the expected PV reply (zero extra search) and offers takeback of
   the move pair. Also fixed user-reported layout shift by giving banners a
   fixed-height status strip. 8 coach tests added (21 total).
+- 2026-06-11 — spec amended (user request): animated piece movement and
+  full-game narration added to definition of done, coaching behavior, a new
+  "Interaction feel" section, and the roadmap (queued ahead of opening book).
