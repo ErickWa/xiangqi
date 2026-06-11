@@ -112,18 +112,6 @@ export default function App() {
 
     function applyAiMove(data) {
       const { from, to } = data.bestMove;
-
-      // Judge the player's last move against what the previous search
-      // expected: if the engine's outlook improved sharply, it was a blunder.
-      const prev = lastAiResult.current;
-      if (prev) {
-        const note = assessPlayerMove({
-          delta: data.score - prev.score,
-          betterText: prev.pv[1] && notate(prev.board, prev.pv[1]),
-        });
-        if (note) pushCoach(note, data.score - prev.score >= BLUNDER_THRESHOLD);
-      }
-
       const capturedChar = game.board[`${to[0]},${to[1]}`]?.char ?? null;
       const next = makeMove(game, from[0], from[1], to[0], to[1]);
       const plan = data.pv[2];
@@ -135,8 +123,22 @@ export default function App() {
         score: data.score,
         planText: planPiece?.color === 'black' ? notate(next.board, plan) : null,
       }));
-      lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
       announceOpenings(next.moveHistory);
+
+      // Judge the player's last move against what the previous search
+      // expected: if the engine's outlook improved sharply, it was a blunder.
+      // Pushed last: pushCoach clears takeback on every earlier entry, so the
+      // offer only survives as the newest entry.
+      const prev = lastAiResult.current;
+      if (prev) {
+        const note = assessPlayerMove({
+          delta: data.score - prev.score,
+          betterText: prev.pv[1] && notate(prev.board, prev.pv[1]),
+        });
+        if (note) pushCoach(note, data.score - prev.score >= BLUNDER_THRESHOLD);
+      }
+
+      lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
       history.current.push(game);
       setInFlight(true);
       setGame(next);

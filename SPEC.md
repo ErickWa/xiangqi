@@ -236,3 +236,8 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — user-reported fix: axis labels were overlapped by edge pieces
   and their selection/last-move rings; board padding widened 48→56 and labels
   moved to the outer rim so they always stay clear.
+- 2026-06-11 — review: found the takeback button was unreachable since coach
+  v1 — the AI-move explanation was pushed after the blunder note, and
+  pushCoach clears takeback on all earlier entries, so the offer died in the
+  same batch. Blunder note is now pushed last. Opening book and label fix
+  otherwise clean. src/ at 1,985 lines (budget 3,000).
