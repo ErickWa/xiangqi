@@ -233,3 +233,6 @@ Work top to bottom; fix anything broken first.
   screen horses) matched against early move notation within per-side ply
   windows; coach announces each once per game with a one-line idea. 5 tests
   added (30 total). src/ at 1,975 lines (budget 3,000).
+- 2026-06-11 — user-reported fix: axis labels were overlapped by edge pieces
+  and their selection/last-move rings; board padding widened 48→56 and labels
+  moved to the outer rim so they always stay clear.

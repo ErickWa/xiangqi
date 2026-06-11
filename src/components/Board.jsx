@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Piece from './Piece';
 
 const CELL = 64;
-const PAD  = 48;
+// Wide enough that edge pieces (disc + selection/last-move rings, ~33px)
+// never reach the axis labels at the outer rim.
+const PAD  = 56;
 const W = 8 * CELL + 2 * PAD;
 const H = 9 * CELL + 2 * PAD;
 
@@ -45,13 +47,13 @@ function AxisLabels() {
   const cols = 'abcdefghi';
   for (let col = 0; col < 9; col++) {
     labels.push(
-      <text key={`c${col}`} x={x(col)} y={H - PAD / 2 + 6} textAnchor="middle"
+      <text key={`c${col}`} x={x(col)} y={H - 12} textAnchor="middle"
         fill="#7a4010" fontSize="13" fontFamily="monospace" opacity="0.7">{cols[col]}</text>,
     );
   }
   for (let row = 0; row < 10; row++) {
     labels.push(
-      <text key={`r${row}`} x={PAD / 2 - 6} y={y(row)} textAnchor="middle" dominantBaseline="central"
+      <text key={`r${row}`} x={14} y={y(row)} textAnchor="middle" dominantBaseline="central"
         fill="#7a4010" fontSize="13" fontFamily="monospace" opacity="0.7">{row}</text>,
     );
   }
