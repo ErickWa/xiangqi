@@ -124,7 +124,7 @@ export default function Board({ gameState, onSelect, onMove, disabled = false })
           fill="rgba(0,160,255,0.35)"
           stroke="rgba(0,160,255,0.8)"
           strokeWidth="2"
-          onClick={() => onMove(row, col)}
+          onClick={() => !disabled && onMove(row, col)}
           style={{ cursor: 'pointer' }}
         />
       ))}

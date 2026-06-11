@@ -203,3 +203,9 @@ Work top to bottom; fix anything broken first.
   captured piece fades out under the capturer; threatened general pulses;
   input locked 320ms while a piece is in flight; AI reply waits out a 450ms
   beat so it reads as a response. src/ at 1,764 lines (budget 3,000).
+- 2026-06-11 — review: coach + animation diff is sound (worker/beat cleanup,
+  capture-fade edge cases, flight lock all verified). One real bug fixed: a
+  declined takeback offer stayed clickable after the player's next move and
+  would have reverted the wrong move pair — offers now expire on the player's
+  next move. Valid-move dots now respect `disabled` (defensive). src/ at
+  1,769 lines (budget 3,000).

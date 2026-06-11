@@ -59,6 +59,11 @@ export default function App() {
 
   const handleMove = useCallback((toRow, toCol) => {
     setInFlight(true);
+    // A declined takeback offer expires once the player moves on; after this
+    // move redSnapshot no longer matches the entry that offered it.
+    setCoachLog(log => log.some(e => e.takeback)
+      ? log.map(e => ({ ...e, takeback: false }))
+      : log);
     setGame(g => {
       if (!g.selected) return g;
       redSnapshot.current = g;
