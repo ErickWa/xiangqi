@@ -80,7 +80,8 @@
   font-size: 0.9rem;
   transition: background 0.15s;
 }
-.btn-reset:hover { background: #9a4010; }
+.btn-reset:hover:not(:disabled) { background: #9a4010; }
+.btn-reset:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ── Banners (inside a fixed-height strip so the board never shifts) ── */
 .status-strip {

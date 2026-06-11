@@ -26,7 +26,7 @@ export default function App() {
   const [aiError, setAiError] = useState(null);
   const [coachLog, setCoachLog] = useState([]);
   const lastAiResult = useRef(null); // previous search: {score, pv, board after AI's move}
-  const redSnapshot = useRef(null);  // game state before the player's last move
+  const history = useRef([]);        // pre-move snapshots, one per move played
   const logId = useRef(0);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
@@ -62,10 +62,10 @@ export default function App() {
     const [fromRow, fromCol] = game.selected;
     const piece = game.board[`${fromRow},${fromCol}`];
     const next = makeMove(game, fromRow, fromCol, toRow, toCol);
-    redSnapshot.current = game;
+    history.current.push(game);
     setInFlight(true);
     // A declined takeback offer expires once the player moves on; after this
-    // move redSnapshot no longer matches the entry that offered it.
+    // move the history top no longer matches the entry that offered it.
     setCoachLog(log => log.some(e => e.takeback)
       ? log.map(e => ({ ...e, takeback: false }))
       : log);
@@ -124,6 +124,7 @@ export default function App() {
         planText: planPiece?.color === 'black' ? notate(next.board, plan) : null,
       }));
       lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
+      history.current.push(game);
       setInFlight(true);
       setGame(next);
     }
@@ -145,16 +146,29 @@ export default function App() {
     setAiError(null);
     setCoachLog([]);
     lastAiResult.current = null;
-    redSnapshot.current = null;
+    history.current = [];
     setGame(createInitialState());
+  }
+
+  // Rewind to the player's previous turn: one step normally, two when the
+  // AI has already replied (vs AI the player must land back on their turn).
+  function rewind() {
+    const h = history.current;
+    if (h.length === 0) return;
+    let target = h.pop();
+    if (aiEnabled) while (target.currentTurn !== 'red' && h.length > 0) target = h.pop();
+    lastAiResult.current = null; // previous search no longer matches the position
+    setCoachLog(log => log.some(e => e.takeback)
+      ? log.map(e => ({ ...e, takeback: false }))
+      : log);
+    setInFlight(true); // pieces glide back
+    setGame(target);
   }
 
   // Revert both the player's blundered move and the AI's reply.
   function takeBack(entryId) {
-    if (!redSnapshot.current) return;
-    setGame(redSnapshot.current);
-    redSnapshot.current = null;
-    lastAiResult.current = null;
+    if (history.current.length === 0) return;
+    rewind();
     setCoachLog(log => log.map(e =>
       e.id === entryId ? { ...e, takeback: false, text: `${e.text} (taken back)` } : e,
     ));
@@ -183,6 +197,14 @@ export default function App() {
             onClick={() => { setAiError(null); setAiEnabled(e => !e); }}
           >
             AI opponent: {aiEnabled ? 'On' : 'Off'}
+          </button>
+          <button
+            className="btn-reset"
+            onClick={rewind}
+            disabled={game.moveHistory.length === 0}
+            title="Rewind to your previous turn"
+          >
+            ↩ Back
           </button>
           <button className="btn-reset" onClick={resetGame}>
             New Game

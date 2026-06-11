@@ -74,6 +74,8 @@ just happened:
   check gets a distinct cue on the threatened general.
 - Input is locked only while a piece is in flight; the UI must never feel
   laggy because of animation.
+- A **Back** button rewinds to the player's previous turn at any time (vs the
+  AI it undoes the move pair); the blunder takeback is the same rewind.
 
 ## Architecture
 
@@ -217,3 +219,8 @@ Work top to bottom; fix anything broken first.
   logic-state facts computed in App; feed now alternates You/AI lines and only
   narrates when the AI opponent is on (the coach speaks as the opponent).
   4 tests added (25 total). src/ at 1,848 lines (budget 3,000).
+- 2026-06-11 — user request: Back button rewinds to the player's previous
+  turn (undoes the AI-reply/player-move pair, or one move with AI off) via a
+  history stack of pre-move snapshots; blunder takeback now reuses the same
+  rewind, replacing the single-snapshot mechanism. Works mid-search and
+  after game over.
