@@ -97,7 +97,7 @@ Work top to bottom; fix anything broken first.
       iterative-deepening alpha-beta with capture quiescence, time-limited,
       in a Web Worker. Replace the `/api/move` opponent with it; delete
       `functions/api/move.js`.
-- [ ] **Strength levels**: 3+ levels via search time/depth, selectable in UI.
+- [x] **Strength levels**: 3+ levels via search time/depth, selectable in UI.
 - [ ] **Offline coach v1** (`src/coach/`): move explanations and blunder
       detection from engine output (eval delta, PV, threatened pieces) via
       templates; takeback on blunders.
@@ -148,3 +148,6 @@ Work top to bottom; fix anything broken first.
   Reaches depth 5 in 1.5s from the start position. App now uses the worker;
   `/api/move` and its rate-limit retry machinery deleted (also removes the
   network-block failure mode seen earlier today). 4 engine tests added.
+- 2026-06-11 — Strength levels: 初级/中级/高级 selector in the header maps to
+  engine limits (depth 2/250ms, depth 4/700ms, depth 64/1500ms); strength
+  varies only by search depth/time per the coaching spec.

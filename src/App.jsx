@@ -5,9 +5,18 @@ import { createInitialState } from './logic/gameState';
 import { getValidMoves, makeMove, isGameOver } from './logic/moves';
 import './App.css';
 
+// Strength comes from search depth/time only — lower levels are shallower,
+// never random.
+const AI_LEVELS = [
+  { label: '初级 Casual', limits: { maxDepth: 2, timeMs: 250 } },
+  { label: '中级 Club', limits: { maxDepth: 4, timeMs: 700 } },
+  { label: '高级 Master', limits: { maxDepth: 64, timeMs: 1500 } },
+];
+
 export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiLevel, setAiLevel] = useState(1);
   const [aiError, setAiError] = useState(null);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
@@ -50,10 +59,13 @@ export default function App() {
       setAiEnabled(false);
       setAiError(err.message || 'Engine failed');
     };
-    worker.postMessage({ position: { board: game.board, turn: 'black' }, limits: { timeMs: 1500 } });
+    worker.postMessage({
+      position: { board: game.board, turn: 'black' },
+      limits: AI_LEVELS[aiLevel].limits,
+    });
 
     return () => worker.terminate();
-  }, [aiThinking, game.board, handleAiMove]);
+  }, [aiThinking, game.board, aiLevel, handleAiMove]);
 
   function resetGame() {
     setAiError(null);
@@ -68,6 +80,16 @@ export default function App() {
           <span className="subtitle">Xiangqi · Learn Chinese Chess</span>
         </div>
         <div className="header-actions">
+          <select
+            className="ai-level"
+            value={aiLevel}
+            onChange={e => setAiLevel(Number(e.target.value))}
+            aria-label="AI strength"
+          >
+            {AI_LEVELS.map((lvl, i) => (
+              <option key={lvl.label} value={i}>{lvl.label}</option>
+            ))}
+          </select>
           <button
             className={`btn-ai-toggle ${aiEnabled ? 'active' : ''}`}
             onClick={() => { setAiError(null); setAiEnabled(e => !e); }}

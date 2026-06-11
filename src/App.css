@@ -43,6 +43,16 @@
   gap: 10px;
 }
 
+.ai-level {
+  background: #1a2430;
+  color: #7ab8cc;
+  border: 1px solid #2a4a5a;
+  padding: 8px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
 .btn-ai-toggle {
   background: #1a2430;
   color: #7ab8cc;
