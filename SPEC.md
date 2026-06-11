@@ -151,3 +151,8 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — Strength levels: 初级/中级/高级 selector in the header maps to
   engine limits (depth 2/250ms, depth 4/700ms, depth 64/1500ms); strength
   varies only by search depth/time per the coaching spec.
+- 2026-06-11 — review: engine + levels diff is sound (movegen bounds, time
+  abort, PV handling all verified); only cleanup was un-exporting the
+  internal `toFlat`. Known limitation noted: the engine has no repetition
+  history, so it could theoretically lose by the perpetual-check rule —
+  revisit if observed in play. src/ at 1,477 lines (budget 3,000).

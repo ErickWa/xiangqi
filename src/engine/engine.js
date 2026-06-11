@@ -21,7 +21,7 @@ const HORSE = [
 
 const isRed = p => p < 'a';
 
-export function toFlat(board) {
+function toFlat(board) {
   const b = new Array(90).fill(null);
   for (const [key, piece] of Object.entries(board)) {
     const [r, c] = key.split(',').map(Number);
