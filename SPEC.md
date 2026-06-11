@@ -138,7 +138,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Opening book**: small data table of common openings with names and
       one-line ideas; coach announces recognized openings.
 - [x] **Post-game review**: top-3 consequential moments with better lines.
-- [ ] **Claude as optional enhancement**: gate `/api/analyze` behind a flag;
+- [x] **Claude as optional enhancement**: gate `/api/analyze` behind a flag;
       app fully functional without it; graceful offline degradation.
 - [ ] **Simplification pass**: remove dead code, collapse needless
       abstractions, confirm `src/` LOC budget, update README to match reality.
@@ -247,3 +247,8 @@ Work top to bottom; fix anything broken first.
   order via `postGameReview` (or a compliment for a clean game). Rewind
   truncates the log and re-arms the review. 2 tests added (32 total).
   src/ at 2,042 lines (budget 3,000).
+- 2026-06-11 — Claude as optional enhancement: the analysis panel is gated
+  behind `VITE_CLAUDE_COACH` (build with `=off` to compile it out — verified
+  absent from the bundle); a failed `/api/analyze` call now degrades to a
+  friendly notice pointing at the offline coach feed instead of a dev-centric
+  error. App is fully functional with no backend.

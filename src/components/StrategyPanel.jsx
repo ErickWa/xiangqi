@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { boardToAscii } from '../logic/gameState';
 
+// Claude-backed analysis is an optional enhancement: build with
+// VITE_CLAUDE_COACH=off to compile the section out entirely. Even when
+// built in, a failed call degrades to a notice — the offline coach
+// (feed above) is the product; this panel is extra.
+const CLAUDE_COACH = import.meta.env.VITE_CLAUDE_COACH !== 'off';
+
 export default function StrategyPanel({ gameState, coachLog = [], onTakeback }) {
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,8 +61,11 @@ export default function StrategyPanel({ gameState, coachLog = [], onTakeback }) 
           } catch { /* skip malformed chunks */ }
         }
       }
-    } catch (err) {
-      setAnalysis(`Error: ${err.message}\n\nMake sure ANTHROPIC_API_KEY is set in your .dev.vars file.`);
+    } catch {
+      setAnalysis(
+        'Claude analysis is unavailable (offline, or no API key configured). '
+        + 'Everything else works without it — the coach feed above keeps narrating your game.',
+      );
     } finally {
       setLoading(false);
     }
@@ -90,30 +99,34 @@ export default function StrategyPanel({ gameState, coachLog = [], onTakeback }) 
         </div>
       )}
 
-      <div className="analysis-box" ref={boxRef}>
-        {analysis || (
-          <p className="placeholder">
-            Click &ldquo;Analyze&rdquo; to get strategic advice from the AI coach.
-            You can also ask a specific question below.
-          </p>
-        )}
-        {loading && <span className="cursor">▍</span>}
-      </div>
+      {CLAUDE_COACH && (
+        <>
+          <div className="analysis-box" ref={boxRef}>
+            {analysis || (
+              <p className="placeholder">
+                Click &ldquo;Analyze&rdquo; to get strategic advice from the AI coach.
+                You can also ask a specific question below.
+              </p>
+            )}
+            {loading && <span className="cursor">▍</span>}
+          </div>
 
-      <div className="input-row">
-        <input
-          className="question-input"
-          type="text"
-          placeholder="Ask a question (optional)…"
-          value={question}
-          onChange={e => setQuestion(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && analyze()}
-          disabled={loading}
-        />
-        <button className="analyze-btn" onClick={analyze} disabled={loading}>
-          {loading ? 'Analyzing…' : 'Analyze'}
-        </button>
-      </div>
+          <div className="input-row">
+            <input
+              className="question-input"
+              type="text"
+              placeholder="Ask a question (optional)…"
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && analyze()}
+              disabled={loading}
+            />
+            <button className="analyze-btn" onClick={analyze} disabled={loading}>
+              {loading ? 'Analyzing…' : 'Analyze'}
+            </button>
+          </div>
+        </>
+      )}
 
       {gameState.moveHistory.length > 0 && (
         <div className="history">
