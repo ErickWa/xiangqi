@@ -259,3 +259,10 @@
 }
 .move-chip.red   { background: #3a1500; color: #ffe066; }
 .move-chip.black { background: #1a1a1a; color: #aaa;    }
+
+/* ── Board animation ── */
+@keyframes piece-fade { to { opacity: 0; } }
+.piece-fading { animation: piece-fade 350ms ease forwards; pointer-events: none; }
+
+@keyframes check-pulse { 50% { stroke-opacity: 0.2; } }
+.check-pulse { animation: check-pulse 1s ease-in-out infinite; }

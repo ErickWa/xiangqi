@@ -31,6 +31,14 @@ export default function App() {
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
 
+  // Lock input while a moved piece is gliding (matches the 300ms transition).
+  const [inFlight, setInFlight] = useState(false);
+  useEffect(() => {
+    if (!inFlight) return;
+    const t = setTimeout(() => setInFlight(false), 320);
+    return () => clearTimeout(t);
+  }, [inFlight]);
+
   // Newest entry is the only one that may offer a takeback.
   const pushCoach = useCallback((text, takeback = false) => setCoachLog(log => [
     ...log.map(e => ({ ...e, takeback: false })),
@@ -50,6 +58,7 @@ export default function App() {
   }, []);
 
   const handleMove = useCallback((toRow, toCol) => {
+    setInFlight(true);
     setGame(g => {
       if (!g.selected) return g;
       redSnapshot.current = g;
@@ -61,12 +70,18 @@ export default function App() {
     if (!aiThinking) return;
 
     const worker = new Worker(new URL('./engine/worker.js', import.meta.url), { type: 'module' });
+    const started = Date.now();
+    let beat; // ensures the reply lands after the player's piece settles
     worker.onmessage = ({ data }) => {
       if (!data.bestMove) {
         setAiEnabled(false);
         setAiError(data.error || 'Engine found no move');
         return;
       }
+      beat = setTimeout(() => applyAiMove(data), Math.max(0, 450 - (Date.now() - started)));
+    };
+
+    function applyAiMove(data) {
       const { from, to } = data.bestMove;
 
       // Judge the player's last move against what the previous search
@@ -92,8 +107,10 @@ export default function App() {
         planText: planPiece?.color === 'black' ? notate(next.board, plan) : null,
       }));
       lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
+      setInFlight(true);
       setGame(next);
-    };
+    }
+
     worker.onerror = (err) => {
       console.error('Engine error:', err);
       setAiEnabled(false);
@@ -104,7 +121,7 @@ export default function App() {
       limits: AI_LEVELS[aiLevel].limits,
     });
 
-    return () => worker.terminate();
+    return () => { worker.terminate(); clearTimeout(beat); };
   }, [aiThinking, game, aiLevel, pushCoach]);
 
   function resetGame() {
@@ -176,7 +193,7 @@ export default function App() {
           gameState={game}
           onSelect={handleSelect}
           onMove={handleMove}
-          disabled={gameOver || (aiEnabled && game.currentTurn === 'black')}
+          disabled={gameOver || inFlight || (aiEnabled && game.currentTurn === 'black')}
         />
         <StrategyPanel gameState={game} coachLog={coachLog} onTakeback={takeBack} />
       </main>

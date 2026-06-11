@@ -126,7 +126,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Offline coach v1** (`src/coach/`): move explanations and blunder
       detection from engine output (eval delta, PV, threatened pieces) via
       templates; takeback on blunders.
-- [ ] **Animated movement**: pieces glide between intersections per the
+- [x] **Animated movement**: pieces glide between intersections per the
       "Interaction feel" section (CSS transitions only, no new dependencies);
       capture fade, check cue, persistent last-move highlight, input locked
       during flight.
@@ -197,3 +197,9 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — spec amended (user request): animated piece movement and
   full-game narration added to definition of done, coaching behavior, a new
   "Interaction feel" section, and the roadmap (queued ahead of opening book).
+- 2026-06-11 — Animated movement: pieces get stable ids so Board keys them by
+  identity and a 300ms CSS transform transition makes moves glide; `makeMove`
+  records `lastMove` (origin dot + destination ring stay until the next move);
+  captured piece fades out under the capturer; threatened general pulses;
+  input locked 320ms while a piece is in flight; AI reply waits out a 450ms
+  beat so it reads as a response. src/ at 1,764 lines (budget 3,000).

@@ -286,6 +286,7 @@ export function makeMove(state, fromRow, fromCol, toRow, toCol) {
     currentTurn: nextTurn,
     selected: null,
     validMoves: [],
+    lastMove: { from: [fromRow, fromCol], to: [toRow, toCol] },
     moveHistory: [...state.moveHistory, toNotation(piece, fromRow, fromCol, toRow, toCol)],
     positionLog,
     status,

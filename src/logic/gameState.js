@@ -29,6 +29,7 @@ export function createInitialState() {
       const type = INITIAL_LAYOUT[row][col];
       if (type) {
         board[`${row},${col}`] = {
+          id: `${row},${col}`, // stable for the piece's lifetime (animation identity)
           type,
           color: type === type.toUpperCase() ? RED : BLACK,
           char: PIECE_CHARS[type],
@@ -42,6 +43,7 @@ export function createInitialState() {
     moveHistory: [],
     selected: null,
     validMoves: [],
+    lastMove: null,
     status: 'playing',
     winner: null,
     positionLog: [{ key: positionKey(board, RED), mover: null, gaveCheck: false }],
