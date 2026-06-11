@@ -88,7 +88,7 @@ export default function StrategyPanel({ gameState, coachLog = [], onTakeback }) 
         <div className="coach-feed" ref={feedRef}>
           {coachLog.map(entry => (
             <p key={entry.id} className="coach-entry">
-              {entry.text}
+              {entry.text}{' '}
               {entry.takeback && (
                 <button className="takeback-btn" onClick={() => onTakeback(entry.id)}>
                   Take back

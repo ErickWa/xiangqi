@@ -72,8 +72,10 @@ just happened:
   origin/destination squares stay highlighted until the player moves.
 - Captures get a visible emphasis (e.g. the captured piece fades out);
   check gets a distinct cue on the threatened general.
-- Input is locked only while a piece is in flight; the UI must never feel
-  laggy because of animation.
+- Animation is purely cosmetic and never costs input: board state is final
+  the instant a move applies, clicks stay live during a glide, and turn
+  gating (not a timer) is what prevents out-of-turn moves. The UI must never
+  feel laggy because of animation.
 - A **Back** button rewinds to the player's previous turn at any time (vs the
   AI it undoes the move pair); the blunder takeback is the same rewind.
 
@@ -266,3 +268,10 @@ Work top to bottom; fix anything broken first.
   (narration, blunders/takeback, openings, post-game review), animated
   movement, Claude optional behind a flag, static no-backend bundle, 32 tests
   + lint + build green. Loop complete; src/ at 2,055 lines (budget 3,000).
+- 2026-06-11 — browser verification (Playwright, real UI): all features
+  observed working end to end; two issues surfaced and fixed: (1) the 320ms
+  input flight-lock silently swallowed clicks during glides — removed; turn
+  gating alone prevents out-of-turn moves (re-verified: rapid clicks can't
+  double-move, instant follow-ups now register, AI-turn clicks still
+  blocked); (2) missing space between blunder text and the Take back button.
+  Interaction-feel spec bullet amended: animation never costs input.

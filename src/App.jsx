@@ -34,14 +34,6 @@ export default function App() {
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
 
-  // Lock input while a moved piece is gliding (matches the 300ms transition).
-  const [inFlight, setInFlight] = useState(false);
-  useEffect(() => {
-    if (!inFlight) return;
-    const t = setTimeout(() => setInFlight(false), 320);
-    return () => clearTimeout(t);
-  }, [inFlight]);
-
   // Newest entry is the only one that may offer a takeback.
   const pushCoach = useCallback((text, takeback = false) => setCoachLog(log => [
     ...log.map(e => ({ ...e, takeback: false })),
@@ -84,7 +76,6 @@ export default function App() {
     const piece = game.board[`${fromRow},${fromCol}`];
     const next = makeMove(game, fromRow, fromCol, toRow, toCol);
     history.current.push(game);
-    setInFlight(true);
     // A declined takeback offer expires once the player moves on; after this
     // move the history top no longer matches the entry that offered it.
     setCoachLog(log => log.some(e => e.takeback)
@@ -157,7 +148,6 @@ export default function App() {
 
       lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
       history.current.push(game);
-      setInFlight(true);
       setGame(next);
     }
 
@@ -199,8 +189,7 @@ export default function App() {
     setCoachLog(log => log.some(e => e.takeback)
       ? log.map(e => ({ ...e, takeback: false }))
       : log);
-    setInFlight(true); // pieces glide back
-    setGame(target);
+    setGame(target); // pieces glide back
   }
 
   // Revert both the player's blundered move and the AI's reply.
@@ -270,7 +259,7 @@ export default function App() {
           gameState={game}
           onSelect={handleSelect}
           onMove={handleMove}
-          disabled={gameOver || inFlight || (aiEnabled && game.currentTurn === 'black')}
+          disabled={gameOver || (aiEnabled && game.currentTurn === 'black')}
         />
         <StrategyPanel gameState={game} coachLog={coachLog} onTakeback={takeBack} />
       </main>
