@@ -15,28 +15,28 @@ enhancement, never a requirement.
 
 ## Definition of done
 
-- [ ] A player can complete a full legal game vs the AI with all Xiangqi rules
+- [x] A player can complete a full legal game vs the AI with all Xiangqi rules
       enforced (including check, checkmate, stalemate, perpetual-check/chase
       repetition, and the flying-general rule).
-- [ ] The opponent is a **local engine** (no API call needed to play): plain JS
+- [x] The opponent is a **local engine** (no API call needed to play): plain JS
       evaluation + iterative-deepening alpha-beta search running in a Web
       Worker, with 3+ strength levels.
-- [ ] Coaching works offline: move explanations, blunder warnings, and
+- [x] Coaching works offline: move explanations, blunder warnings, and
       post-game review derived from engine analysis (principal variation, eval
       swings, hanging pieces, named opening patterns) rendered through a small
       template library.
-- [ ] Pieces move visibly, not instantaneously: every move (player and AI)
+- [x] Pieces move visibly, not instantaneously: every move (player and AI)
       animates the piece gliding from origin to destination, captures and
       checks are emphasized, and the last move stays highlighted so the AI's
       reply is always easy to follow.
-- [ ] The game is narrated as it unfolds: a running written commentary feed
+- [x] The game is narrated as it unfolds: a running written commentary feed
       covers both sides' moves — the AI's plans *and* the player's moves —
       so a learner can read the story of the game while playing it.
-- [ ] Claude-backed coaching is an optional enhancement behind a single flag;
+- [x] Claude-backed coaching is an optional enhancement behind a single flag;
       the app degrades gracefully when no API key / no network is present.
-- [ ] `npm run build` produces a static bundle that is fully functional when
+- [x] `npm run build` produces a static bundle that is fully functional when
       served with no backend (Pages Functions optional).
-- [ ] Rules engine has automated tests (move-generation counts from known
+- [x] Rules engine has automated tests (move-generation counts from known
       positions, check/mate scenarios) and `npm test`, `npm run lint`,
       `npm run build` all pass.
 
@@ -260,3 +260,9 @@ Work top to bottom; fix anything broken first.
   by app or tests, no needless abstractions found); rewrote README to match
   reality (offline-first local engine + coach, optional Claude panel behind
   VITE_CLAUDE_COACH). src/ at 2,055 lines (budget 3,000).
+- 2026-06-11 — review (final): simplification diff clean, no dangling asset
+  references; Definition of done verified end to end and all boxes checked —
+  full rules with tests, local Worker engine with 3 levels, offline coaching
+  (narration, blunders/takeback, openings, post-game review), animated
+  movement, Claude optional behind a flag, static no-backend bundle, 32 tests
+  + lint + build green. Loop complete; src/ at 2,055 lines (budget 3,000).
