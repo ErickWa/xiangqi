@@ -130,7 +130,7 @@ Work top to bottom; fix anything broken first.
       "Interaction feel" section (CSS transitions only, no new dependencies);
       capture fade, check cue, persistent last-move highlight, input locked
       during flight.
-- [ ] **Full-game narration**: extend the coach feed to narrate the player's
+- [x] **Full-game narration**: extend the coach feed to narrate the player's
       moves too (captures, checks, threats made/answered, development), so
       the feed reads as a continuous account of the game.
 - [ ] **Opening book**: small data table of common openings with names and
@@ -212,3 +212,8 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — user request: axis labels on the board (columns a–i along the
   bottom, rows 0–9 down the left) matching move notation, so feed entries
   like 炮b7→e7 can be located at a glance.
+- 2026-06-11 — Full-game narration: `explainPlayerMove` template narrates the
+  player's moves (capture, check given, check answered, river crossing) from
+  logic-state facts computed in App; feed now alternates You/AI lines and only
+  narrates when the AI opponent is on (the coach speaks as the opponent).
+  4 tests added (25 total). src/ at 1,848 lines (budget 3,000).

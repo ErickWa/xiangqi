@@ -38,6 +38,19 @@ export function explainAiMove({ moveText, capturedChar, check, score, planText }
   return parts.join(' ');
 }
 
+// Narrates the player's move so the feed reads as a running account of the
+// game. All facts are logic-state observations passed in by the caller.
+export function explainPlayerMove({ moveText, pieceChar, capturedChar, check, escapedCheck, crossedRiver }) {
+  const parts = [];
+  parts.push(capturedChar
+    ? `You captured my ${pieceName(capturedChar)} with ${moveText}.`
+    : `You played ${moveText}.`);
+  if (check) parts.push('My general is in check!');
+  else if (escapedCheck) parts.push('That answers my threat.');
+  else if (crossedRiver) parts.push(`Your ${pieceName(pieceChar)} crosses the river into my half.`);
+  return parts.join(' ');
+}
+
 // delta: how much the engine's outlook improved after the player's move,
 // relative to the reply it expected. Positive = the player did worse than
 // expected; strongly negative = the player outplayed the expectation.

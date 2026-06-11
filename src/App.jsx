@@ -3,7 +3,7 @@ import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
 import { createInitialState } from './logic/gameState';
 import { getValidMoves, makeMove, isGameOver, toNotation } from './logic/moves';
-import { explainAiMove, assessPlayerMove, BLUNDER_THRESHOLD } from './coach/coach';
+import { explainAiMove, explainPlayerMove, assessPlayerMove, BLUNDER_THRESHOLD } from './coach/coach';
 import './App.css';
 
 const notate = (board, { from, to }) => {
@@ -58,18 +58,30 @@ export default function App() {
   }, []);
 
   const handleMove = useCallback((toRow, toCol) => {
+    if (!game.selected) return;
+    const [fromRow, fromCol] = game.selected;
+    const piece = game.board[`${fromRow},${fromCol}`];
+    const next = makeMove(game, fromRow, fromCol, toRow, toCol);
+    redSnapshot.current = game;
     setInFlight(true);
     // A declined takeback offer expires once the player moves on; after this
     // move redSnapshot no longer matches the entry that offered it.
     setCoachLog(log => log.some(e => e.takeback)
       ? log.map(e => ({ ...e, takeback: false }))
       : log);
-    setGame(g => {
-      if (!g.selected) return g;
-      redSnapshot.current = g;
-      return makeMove(g, g.selected[0], g.selected[1], toRow, toCol);
-    });
-  }, []);
+    if (aiEnabled) {
+      const check = next.status === 'check' || next.status === 'checkmate';
+      pushCoach(explainPlayerMove({
+        moveText: notate(game.board, { from: [fromRow, fromCol], to: [toRow, toCol] }),
+        pieceChar: piece.char,
+        capturedChar: game.board[`${toRow},${toCol}`]?.char ?? null,
+        check,
+        escapedCheck: game.status === 'check' && !check,
+        crossedRiver: piece.color === 'red' && fromRow >= 5 && toRow <= 4,
+      }));
+    }
+    setGame(next);
+  }, [game, aiEnabled, pushCoach]);
 
   useEffect(() => {
     if (!aiThinking) return;

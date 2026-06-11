@@ -1,6 +1,40 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { explainAiMove, assessPlayerMove, pieceName, BLUNDER_THRESHOLD } from './coach.js';
+import { explainAiMove, explainPlayerMove, assessPlayerMove, pieceName, BLUNDER_THRESHOLD } from './coach.js';
+
+test('narrates a player capture giving check', () => {
+  const text = explainPlayerMove({
+    moveText: '車a9→a0', pieceChar: '車', capturedChar: '砲', check: true,
+    escapedCheck: false, crossedRiver: false,
+  });
+  assert.match(text, /You captured my cannon with 車a9→a0/);
+  assert.match(text, /general is in check/);
+});
+
+test('narrates escaping a check', () => {
+  const text = explainPlayerMove({
+    moveText: '帅e9→e8', pieceChar: '帅', capturedChar: null, check: false,
+    escapedCheck: true, crossedRiver: false,
+  });
+  assert.match(text, /You played 帅e9→e8/);
+  assert.match(text, /answers my threat/);
+});
+
+test('narrates a river crossing', () => {
+  const text = explainPlayerMove({
+    moveText: '兵e5→e4', pieceChar: '兵', capturedChar: null, check: false,
+    escapedCheck: false, crossedRiver: true,
+  });
+  assert.match(text, /soldier crosses the river/);
+});
+
+test('quiet player move is still narrated', () => {
+  const text = explainPlayerMove({
+    moveText: '馬b9→c7', pieceChar: '馬', capturedChar: null, check: false,
+    escapedCheck: false, crossedRiver: false,
+  });
+  assert.equal(text, 'You played 馬b9→c7.');
+});
 
 test('explains a capture with check', () => {
   const text = explainAiMove({
