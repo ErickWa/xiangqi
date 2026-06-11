@@ -20,6 +20,7 @@ function getAllValidMoves(board, color) {
 export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiRetry, setAiRetry] = useState(0);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
 
@@ -50,6 +51,7 @@ export default function App() {
     if (moves.length === 0) return;
 
     let cancelled = false;
+    let timer;
 
     fetch('/api/move', {
       method: 'POST',
@@ -63,22 +65,21 @@ export default function App() {
       .then(r => r.json())
       .then(({ from, to, error }) => {
         if (cancelled) return;
-        if (error || !from || !to) {
-          console.error('AI move error:', error);
-          setAiEnabled(false);
-          return;
-        }
+        if (error || !from || !to) throw new Error(error || 'Bad AI response');
+        setAiRetry(0);
         handleAiMove(from[0], from[1], to[0], to[1]);
       })
       .catch(err => {
-        if (!cancelled) {
-          console.error('AI move failed:', err);
-          setAiEnabled(false);
-        }
+        if (cancelled) return;
+        console.error('AI move failed:', err);
+        // Low-tier API keys allow ~5 requests/min; wait out the rate-limit
+        // window and retry before giving up on the AI.
+        if (aiRetry < 3) timer = setTimeout(() => setAiRetry(r => r + 1), 15000);
+        else setAiEnabled(false);
       });
 
-    return () => { cancelled = true; };
-  }, [aiEnabled, game.currentTurn, gameOver, game.board, game.moveHistory, handleAiMove]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [aiEnabled, game.currentTurn, gameOver, game.board, game.moveHistory, handleAiMove, aiRetry]);
 
   function resetGame() {
     setGame(createInitialState());

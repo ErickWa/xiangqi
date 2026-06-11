@@ -123,3 +123,7 @@ Work top to bottom; fix anything broken first.
 - 2026-06-11 — review: found and fixed play continuing after game over
   (guard in `makeMove` + board disabled); eslint now ignores `.wrangler`
   artifacts; banner cleanup. No scope creep; src/ at 760 lines (budget 3,000).
+- 2026-06-11 — user-reported fix: AI toggle kept switching off mid-game.
+  Cause: low-tier API key (5 req/min) → 429s on /api/move treated as fatal.
+  AI moves now retry up to 3× after the rate-limit window before disabling.
+  (The local engine roadmap item removes this failure mode entirely.)
