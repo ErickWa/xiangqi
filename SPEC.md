@@ -135,7 +135,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Full-game narration**: extend the coach feed to narrate the player's
       moves too (captures, checks, threats made/answered, development), so
       the feed reads as a continuous account of the game.
-- [ ] **Opening book**: small data table of common openings with names and
+- [x] **Opening book**: small data table of common openings with names and
       one-line ideas; coach announces recognized openings.
 - [ ] **Post-game review**: top-3 consequential moments with better lines.
 - [ ] **Claude as optional enhancement**: gate `/api/analyze` behind a flag;
@@ -228,3 +228,8 @@ Work top to bottom; fix anything broken first.
   verified (rewind-during-search cancellation, stack termination on red-turn
   states, takeback-offer expiry); nothing to fix. Moving on to a work
   iteration per the loop prompt.
+- 2026-06-11 — Opening book: `src/coach/openings.js` holds 6 named openings
+  (central cannon both sides, flying elephant, pawn opening, horse opening,
+  screen horses) matched against early move notation within per-side ply
+  windows; coach announces each once per game with a one-line idea. 5 tests
+  added (30 total). src/ at 1,975 lines (budget 3,000).

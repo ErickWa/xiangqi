@@ -4,6 +4,7 @@ import StrategyPanel from './components/StrategyPanel';
 import { createInitialState } from './logic/gameState';
 import { getValidMoves, makeMove, isGameOver, toNotation } from './logic/moves';
 import { explainAiMove, explainPlayerMove, assessPlayerMove, BLUNDER_THRESHOLD } from './coach/coach';
+import { recognizeOpenings } from './coach/openings';
 import './App.css';
 
 const notate = (board, { from, to }) => {
@@ -45,6 +46,16 @@ export default function App() {
     { id: ++logId.current, text, takeback },
   ]), []);
 
+  // Announce each recognized opening once per game.
+  const announcedOpenings = useRef(new Set());
+  const announceOpenings = useCallback((moveHistory) => {
+    for (const o of recognizeOpenings(moveHistory)) {
+      if (announcedOpenings.current.has(o.name)) continue;
+      announcedOpenings.current.add(o.name);
+      pushCoach(`Opening: ${o.name} — ${o.idea}.`);
+    }
+  }, [pushCoach]);
+
   const handleSelect = useCallback((row, col) => {
     if (row === null) {
       setGame(g => ({ ...g, selected: null, validMoves: [] }));
@@ -79,9 +90,10 @@ export default function App() {
         escapedCheck: game.status === 'check' && !check,
         crossedRiver: piece.color === 'red' && fromRow >= 5 && toRow <= 4,
       }));
+      announceOpenings(next.moveHistory);
     }
     setGame(next);
-  }, [game, aiEnabled, pushCoach]);
+  }, [game, aiEnabled, pushCoach, announceOpenings]);
 
   useEffect(() => {
     if (!aiThinking) return;
@@ -124,6 +136,7 @@ export default function App() {
         planText: planPiece?.color === 'black' ? notate(next.board, plan) : null,
       }));
       lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
+      announceOpenings(next.moveHistory);
       history.current.push(game);
       setInFlight(true);
       setGame(next);
@@ -140,13 +153,14 @@ export default function App() {
     });
 
     return () => { worker.terminate(); clearTimeout(beat); };
-  }, [aiThinking, game, aiLevel, pushCoach]);
+  }, [aiThinking, game, aiLevel, pushCoach, announceOpenings]);
 
   function resetGame() {
     setAiError(null);
     setCoachLog([]);
     lastAiResult.current = null;
     history.current = [];
+    announcedOpenings.current = new Set();
     setGame(createInitialState());
   }
 
