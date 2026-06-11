@@ -1,4 +1,4 @@
-import { RED, BLACK, boardToArray } from './gameState.js';
+import { RED, BLACK, boardToArray, positionKey } from './gameState.js';
 
 function inBounds(row, col) {
   return row >= 0 && row <= 9 && col >= 0 && col <= 8;
@@ -211,11 +211,80 @@ export function getValidMoves(board, fromRow, fromCol) {
   });
 }
 
-export function isCheckmate(board, color) {
+export function hasNoLegalMoves(board, color) {
   for (const [key, piece] of Object.entries(board)) {
     if (piece.color !== color) continue;
     const [row, col] = key.split(',').map(Number);
     if (getValidMoves(board, row, col).length > 0) return false;
   }
   return true;
+}
+
+// log: one {key, mover, gaveCheck} entry per position reached. When the
+// latest position has occurred 3 times: if every move by the side that just
+// moved within the repeating cycle gave check, that side loses (perpetual
+// check); otherwise it's a draw. Returns null, 'draw', or the losing color.
+export function repetitionLoser(log) {
+  const last = log[log.length - 1];
+  const occurrences = [];
+  for (let i = 0; i < log.length; i++) {
+    if (log[i].key === last.key) occurrences.push(i);
+  }
+  if (occurrences.length < 3) return null;
+  const cycle = log.slice(occurrences[occurrences.length - 3]);
+  const moverChecks = cycle.filter(e => e.mover === last.mover);
+  return moverChecks.every(e => e.gaveCheck) ? last.mover : 'draw';
+}
+
+export function toNotation(piece, fromRow, fromCol, toRow, toCol) {
+  const cols = 'abcdefghi';
+  return `${piece.char}${cols[fromCol]}${fromRow}→${cols[toCol]}${toRow}`;
+}
+
+const OVER_STATUSES = new Set(['checkmate', 'stalemate', 'perpetual', 'draw']);
+
+export function isGameOver(state) {
+  return OVER_STATUSES.has(state.status);
+}
+
+// Pure reducer: applies a move and resolves the resulting game status
+// (check, checkmate, stalemate — a loss in Xiangqi — repetition draw, or
+// perpetual-check loss). Returns the next game state.
+export function makeMove(state, fromRow, fromCol, toRow, toCol) {
+  const piece = state.board[`${fromRow},${fromCol}`];
+  if (!piece) return state;
+
+  const board = applyMove(state.board, fromRow, fromCol, toRow, toCol);
+  const mover = piece.color;
+  const nextTurn = mover === RED ? BLACK : RED;
+  const gaveCheck = isInCheckState(board, nextTurn);
+  const positionLog = [
+    ...state.positionLog,
+    { key: positionKey(board, nextTurn), mover, gaveCheck },
+  ];
+
+  let status = gaveCheck ? 'check' : 'playing';
+  let winner = null;
+  const repetition = repetitionLoser(positionLog);
+  if (repetition === 'draw') {
+    status = 'draw';
+  } else if (repetition) {
+    status = 'perpetual';
+    winner = repetition === RED ? BLACK : RED;
+  } else if (hasNoLegalMoves(board, nextTurn)) {
+    status = gaveCheck ? 'checkmate' : 'stalemate';
+    winner = mover;
+  }
+
+  return {
+    ...state,
+    board,
+    currentTurn: nextTurn,
+    selected: null,
+    validMoves: [],
+    moveHistory: [...state.moveHistory, toNotation(piece, fromRow, fromCol, toRow, toCol)],
+    positionLog,
+    status,
+    winner,
+  };
 }

@@ -87,7 +87,7 @@ Work top to bottom; fix anything broken first.
 - [x] **Fix the broken opponent**: `functions/api/move.js` calls retired model
       `claude-3-5-sonnet-20241022` (404s). Centralize the model ID in one
       constant shared by both functions and update to a current model.
-- [ ] **Complete the rules engine** in `src/logic/`: verify all piece moves,
+- [x] **Complete the rules engine** in `src/logic/`: verify all piece moves,
       add check detection, checkmate/stalemate, flying-general, and
       repetition/perpetual-check draw rules. Pure functions, no UI coupling.
 - [ ] **Add rules tests**: `node --test` suite with move-generation counts
@@ -116,3 +116,7 @@ Work top to bottom; fix anything broken first.
 - 2026-06-10 — Replaced retired model with `claude-opus-4-8` via shared
   `functions/api/_model.js`; fixed pre-existing lint error in App.jsx by
   deriving `aiThinking` instead of storing it as state.
+- 2026-06-10 — Completed rules engine: pure `makeMove` reducer in logic/
+  resolves checkmate, stalemate (loss), repetition draw, and perpetual-check
+  loss; App handlers are now thin wrappers. Fixed bug where the AI stopped
+  moving while in check.

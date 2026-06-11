@@ -2,13 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
 import { createInitialState, boardToAscii } from './logic/gameState';
-import { getValidMoves, applyMove, isInCheckState, isCheckmate } from './logic/moves';
+import { getValidMoves, makeMove, isGameOver } from './logic/moves';
 import './App.css';
-
-function toNotation(piece, fromRow, fromCol, toRow, toCol) {
-  const cols = 'abcdefghi';
-  return `${piece.char}${cols[fromCol]}${fromRow}→${cols[toCol]}${toRow}`;
-}
 
 function getAllValidMoves(board, color) {
   const moves = [];
@@ -25,7 +20,8 @@ function getAllValidMoves(board, color) {
 export default function App() {
   const [game, setGame] = useState(createInitialState);
   const [aiEnabled, setAiEnabled] = useState(false);
-  const aiThinking = aiEnabled && game.currentTurn === 'black' && game.status === 'playing';
+  const gameOver = isGameOver(game);
+  const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
 
   const handleSelect = useCallback((row, col) => {
     if (row === null) {
@@ -40,52 +36,15 @@ export default function App() {
   }, []);
 
   const handleMove = useCallback((toRow, toCol) => {
-    setGame(g => {
-      if (!g.selected) return g;
-      const [fromRow, fromCol] = g.selected;
-      const piece = g.board[`${fromRow},${fromCol}`];
-      if (!piece) return g;
-
-      const newBoard = applyMove(g.board, fromRow, fromCol, toRow, toCol);
-      const nextTurn = g.currentTurn === 'red' ? 'black' : 'red';
-      const notation = toNotation(piece, fromRow, fromCol, toRow, toCol);
-      const inCheck = isInCheckState(newBoard, nextTurn);
-      const mated   = inCheck && isCheckmate(newBoard, nextTurn);
-
-      return {
-        ...g,
-        board: newBoard,
-        currentTurn: nextTurn,
-        selected: null,
-        validMoves: [],
-        moveHistory: [...g.moveHistory, notation],
-        status: mated ? 'checkmate' : inCheck ? 'check' : 'playing',
-      };
-    });
+    setGame(g => g.selected ? makeMove(g, g.selected[0], g.selected[1], toRow, toCol) : g);
   }, []);
 
   const handleAiMove = useCallback((fromRow, fromCol, toRow, toCol) => {
-    setGame(g => {
-      const piece = g.board[`${fromRow},${fromCol}`];
-      if (!piece) return g;
-      const newBoard = applyMove(g.board, fromRow, fromCol, toRow, toCol);
-      const notation = toNotation(piece, fromRow, fromCol, toRow, toCol);
-      const inCheck = isInCheckState(newBoard, 'red');
-      const mated   = inCheck && isCheckmate(newBoard, 'red');
-      return {
-        ...g,
-        board: newBoard,
-        currentTurn: 'red',
-        selected: null,
-        validMoves: [],
-        moveHistory: [...g.moveHistory, notation],
-        status: mated ? 'checkmate' : inCheck ? 'check' : 'playing',
-      };
-    });
+    setGame(g => makeMove(g, fromRow, fromCol, toRow, toCol));
   }, []);
 
   useEffect(() => {
-    if (!aiEnabled || game.currentTurn !== 'black' || game.status !== 'playing') return;
+    if (!aiEnabled || game.currentTurn !== 'black' || gameOver) return;
 
     const moves = getAllValidMoves(game.board, 'black');
     if (moves.length === 0) return;
@@ -119,7 +78,7 @@ export default function App() {
       });
 
     return () => { cancelled = true; };
-  }, [aiEnabled, game.currentTurn, game.status, game.board, game.moveHistory, handleAiMove]);
+  }, [aiEnabled, game.currentTurn, gameOver, game.board, game.moveHistory, handleAiMove]);
 
   function resetGame() {
     setGame(createInitialState());
@@ -145,9 +104,12 @@ export default function App() {
         </div>
       </header>
 
-      {game.status === 'checkmate' && (
+      {gameOver && (
         <div className="banner checkmate">
-          Checkmate — {game.currentTurn === 'red' ? 'Black' : 'Red'} wins!
+          {game.status === 'draw'
+            ? 'Draw by repetition'
+            : `${{ checkmate: 'Checkmate', stalemate: 'Stalemate', perpetual: 'Perpetual check' }[game.status]}
+               — ${game.winner === 'red' ? 'Red' : 'Black'} wins!`}
         </div>
       )}
 

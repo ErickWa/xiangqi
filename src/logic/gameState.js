@@ -43,7 +43,16 @@ export function createInitialState() {
     selected: null,
     validMoves: [],
     status: 'playing',
+    winner: null,
+    positionLog: [{ key: positionKey(board, RED), mover: null, gaveCheck: false }],
   };
+}
+
+// Compact identity of a position including the side to move — used for
+// repetition detection.
+export function positionKey(board, turn) {
+  const arr = boardToArray(board);
+  return turn + ':' + arr.map(row => row.map(p => p ? p.type : '.').join('')).join('');
 }
 
 export function boardToArray(board) {
