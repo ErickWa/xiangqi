@@ -1,15 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { boardToAscii } from '../logic/gameState';
 
-export default function StrategyPanel({ gameState }) {
+export default function StrategyPanel({ gameState, coachLog = [], onTakeback }) {
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState('');
   const boxRef = useRef(null);
+  const feedRef = useRef(null);
 
   useEffect(() => {
     if (boxRef.current) boxRef.current.scrollTop = boxRef.current.scrollHeight;
   }, [analysis]);
+
+  useEffect(() => {
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+  }, [coachLog]);
 
   async function analyze() {
     if (loading) return;
@@ -69,6 +74,21 @@ export default function StrategyPanel({ gameState }) {
         </span>
         {gameState.status === 'check' && <span className="check-label">Check!</span>}
       </div>
+
+      {coachLog.length > 0 && (
+        <div className="coach-feed" ref={feedRef}>
+          {coachLog.map(entry => (
+            <p key={entry.id} className="coach-entry">
+              {entry.text}
+              {entry.takeback && (
+                <button className="takeback-btn" onClick={() => onTakeback(entry.id)}>
+                  Take back
+                </button>
+              )}
+            </p>
+          ))}
+        </div>
+      )}
 
       <div className="analysis-box" ref={boxRef}>
         {analysis || (

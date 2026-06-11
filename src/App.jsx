@@ -1,9 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Board from './components/Board';
 import StrategyPanel from './components/StrategyPanel';
 import { createInitialState } from './logic/gameState';
-import { getValidMoves, makeMove, isGameOver } from './logic/moves';
+import { getValidMoves, makeMove, isGameOver, toNotation } from './logic/moves';
+import { explainAiMove, assessPlayerMove, BLUNDER_THRESHOLD } from './coach/coach';
 import './App.css';
+
+const notate = (board, { from, to }) => {
+  const piece = board[`${from[0]},${from[1]}`];
+  return piece ? toNotation(piece, from[0], from[1], to[0], to[1]) : null;
+};
 
 // Strength comes from search depth/time only — lower levels are shallower,
 // never random.
@@ -18,8 +24,18 @@ export default function App() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiLevel, setAiLevel] = useState(1);
   const [aiError, setAiError] = useState(null);
+  const [coachLog, setCoachLog] = useState([]);
+  const lastAiResult = useRef(null); // previous search: {score, pv, board after AI's move}
+  const redSnapshot = useRef(null);  // game state before the player's last move
+  const logId = useRef(0);
   const gameOver = isGameOver(game);
   const aiThinking = aiEnabled && game.currentTurn === 'black' && !gameOver;
+
+  // Newest entry is the only one that may offer a takeback.
+  const pushCoach = useCallback((text, takeback = false) => setCoachLog(log => [
+    ...log.map(e => ({ ...e, takeback: false })),
+    { id: ++logId.current, text, takeback },
+  ]), []);
 
   const handleSelect = useCallback((row, col) => {
     if (row === null) {
@@ -34,11 +50,11 @@ export default function App() {
   }, []);
 
   const handleMove = useCallback((toRow, toCol) => {
-    setGame(g => g.selected ? makeMove(g, g.selected[0], g.selected[1], toRow, toCol) : g);
-  }, []);
-
-  const handleAiMove = useCallback((fromRow, fromCol, toRow, toCol) => {
-    setGame(g => makeMove(g, fromRow, fromCol, toRow, toCol));
+    setGame(g => {
+      if (!g.selected) return g;
+      redSnapshot.current = g;
+      return makeMove(g, g.selected[0], g.selected[1], toRow, toCol);
+    });
   }, []);
 
   useEffect(() => {
@@ -52,7 +68,31 @@ export default function App() {
         return;
       }
       const { from, to } = data.bestMove;
-      handleAiMove(from[0], from[1], to[0], to[1]);
+
+      // Judge the player's last move against what the previous search
+      // expected: if the engine's outlook improved sharply, it was a blunder.
+      const prev = lastAiResult.current;
+      if (prev) {
+        const note = assessPlayerMove({
+          delta: data.score - prev.score,
+          betterText: prev.pv[1] && notate(prev.board, prev.pv[1]),
+        });
+        if (note) pushCoach(note, data.score - prev.score >= BLUNDER_THRESHOLD);
+      }
+
+      const capturedChar = game.board[`${to[0]},${to[1]}`]?.char ?? null;
+      const next = makeMove(game, from[0], from[1], to[0], to[1]);
+      const plan = data.pv[2];
+      const planPiece = plan && next.board[`${plan.from[0]},${plan.from[1]}`];
+      pushCoach(explainAiMove({
+        moveText: notate(game.board, data.bestMove),
+        capturedChar,
+        check: next.status === 'check' || next.status === 'checkmate',
+        score: data.score,
+        planText: planPiece?.color === 'black' ? notate(next.board, plan) : null,
+      }));
+      lastAiResult.current = { score: data.score, pv: data.pv, board: next.board };
+      setGame(next);
     };
     worker.onerror = (err) => {
       console.error('Engine error:', err);
@@ -65,11 +105,25 @@ export default function App() {
     });
 
     return () => worker.terminate();
-  }, [aiThinking, game.board, aiLevel, handleAiMove]);
+  }, [aiThinking, game, aiLevel, pushCoach]);
 
   function resetGame() {
     setAiError(null);
+    setCoachLog([]);
+    lastAiResult.current = null;
+    redSnapshot.current = null;
     setGame(createInitialState());
+  }
+
+  // Revert both the player's blundered move and the AI's reply.
+  function takeBack(entryId) {
+    if (!redSnapshot.current) return;
+    setGame(redSnapshot.current);
+    redSnapshot.current = null;
+    lastAiResult.current = null;
+    setCoachLog(log => log.map(e =>
+      e.id === entryId ? { ...e, takeback: false, text: `${e.text} (taken back)` } : e,
+    ));
   }
 
   return (
@@ -102,25 +156,20 @@ export default function App() {
         </div>
       </header>
 
-      {gameOver && (
-        <div className="banner checkmate">
-          {game.status === 'draw'
-            ? 'Draw by repetition'
-            : `${{ checkmate: 'Checkmate', stalemate: 'Stalemate', perpetual: 'Perpetual check' }[game.status]} — ${game.winner === 'red' ? 'Red' : 'Black'} wins!`}
-        </div>
-      )}
-
-      {aiThinking && (
-        <div className="banner ai-thinking">
-          黑方 is thinking…
-        </div>
-      )}
-
-      {aiError && (
-        <div className="banner checkmate">
-          AI opponent stopped: {aiError}
-        </div>
-      )}
+      {/* Fixed-height strip so banners never shift the board. */}
+      <div className="status-strip">
+        {gameOver ? (
+          <div className="banner checkmate">
+            {game.status === 'draw'
+              ? 'Draw by repetition'
+              : `${{ checkmate: 'Checkmate', stalemate: 'Stalemate', perpetual: 'Perpetual check' }[game.status]} — ${game.winner === 'red' ? 'Red' : 'Black'} wins!`}
+          </div>
+        ) : aiError ? (
+          <div className="banner checkmate">AI opponent stopped: {aiError}</div>
+        ) : aiThinking ? (
+          <div className="banner ai-thinking">黑方 is thinking…</div>
+        ) : null}
+      </div>
 
       <main className="main">
         <Board
@@ -129,7 +178,7 @@ export default function App() {
           onMove={handleMove}
           disabled={gameOver || (aiEnabled && game.currentTurn === 'black')}
         />
-        <StrategyPanel gameState={game} />
+        <StrategyPanel gameState={game} coachLog={coachLog} onTakeback={takeBack} />
       </main>
     </div>
   );

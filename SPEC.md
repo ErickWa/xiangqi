@@ -98,7 +98,7 @@ Work top to bottom; fix anything broken first.
       in a Web Worker. Replace the `/api/move` opponent with it; delete
       `functions/api/move.js`.
 - [x] **Strength levels**: 3+ levels via search time/depth, selectable in UI.
-- [ ] **Offline coach v1** (`src/coach/`): move explanations and blunder
+- [x] **Offline coach v1** (`src/coach/`): move explanations and blunder
       detection from engine output (eval delta, PV, threatened pieces) via
       templates; takeback on blunders.
 - [ ] **Opening book**: small data table of common openings with names and
@@ -156,3 +156,9 @@ Work top to bottom; fix anything broken first.
   internal `toFlat`. Known limitation noted: the engine has no repetition
   history, so it could theoretically lose by the perpetual-check rule —
   revisit if observed in play. src/ at 1,477 lines (budget 3,000).
+- 2026-06-11 — Offline coach v1: `src/coach/coach.js` templates narrate each
+  AI move (capture/check, PV-based plan, position stance) in a feed in the
+  strategy panel; blunder detection compares consecutive search scores
+  against the expected PV reply (zero extra search) and offers takeback of
+  the move pair. Also fixed user-reported layout shift by giving banners a
+  fixed-height status strip. 8 coach tests added (21 total).
